@@ -1,0 +1,12 @@
+<form class="movies-form">
+    <mat-form-field class="movies-full-width">
+        <input type="text" placeholder="Pick a movie" aria-label="Number" matInput [formControl]="moviesFormControl" [matAutocomplete]="auto">
+        <mat-autocomplete #auto="matAutocomplete">
+            <mat-option *ngFor="let movie of filteredOptions | async" [value]="option">
+                {{ option }}
+            </mat-option>
+        </mat-autocomplete>
+    </mat-form-field>
+</form>
+
+<!-- <div *ngFor="let movie of movies">{{ movie.name }}</div> -->
