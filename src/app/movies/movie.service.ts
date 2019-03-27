@@ -12,8 +12,14 @@ export class MovieService {
 
     }
 
-    getMovies(): Promise<Array<Movie>> {
-        return this.neo4jService.run("MATCH (n:Movie) RETURN id(n) AS id, n.title AS name").then(result => result.records.map(record => {
+    getMovies(searchString: string): Promise<Array<Movie>> {
+        return this.neo4jService.run(
+          `
+          MATCH (n:Movie)
+          WHERE n.title CONTAINS "`+ searchString +`"
+          RETURN id(n) AS id, n.title AS name
+          `
+        ).then(result => result.records.map(record => {
             var movie = new Movie();
             movie.id = record.get('id');
             movie.name = record.get('name');
@@ -24,24 +30,15 @@ export class MovieService {
 
     getRecommendation(movies: Movie[]): Promise<Array<Movie>> {
         var movieIds = movies.map(m => m.id).join(", ");
-        var query = `       
-        MATCH (m:Movie)<-[r2:RATED]-(u2)
-        WHERE id(m) in [` + movieIds + `]
-        WITH m, u2, COLLECT(r2) AS ratings
-        
-        UNWIND ratings AS r
-        
-        WITH m, u2, sum( (5) * (r.rating) ) AS nom,
-            sqrt( 25 * sum( (r.rating) ^2)) AS denom
-        WHERE denom <> 0
-        
-        WITH m, u2, nom/denom AS pearson
-        ORDER BY pearson DESC LIMIT 10
-        
-        MATCH (u2)-[r:RATED]->(m2:Movie) WHERE m <> m2
-        
-        RETURN m2.title AS name, id(m2) AS id, SUM( pearson * r.rating) AS score
-        ORDER BY score DESC LIMIT 25`
+        var query = `
+        MATCH (movie:Movie)<-[rated:RATED]-(user)
+                WHERE id(movie) IN [`+ movieIds +`]
+                AND rated.rating >= 4
+        WITH user, COUNT(movie) AS commons WHERE commons = 3
+        MATCH (user)-[rated:RATED]->(movie:Movie)
+              WHERE NOT id(movie) IN [`+ movieIds +`]
+        RETURN movie.title as name, id(movie) as id, COUNT(movie) as score ORDER BY score DESC
+        `
 
         // var foo =
         // `

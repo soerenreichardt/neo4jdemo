@@ -1,10 +1,10 @@
 import { Component, OnInit, ElementRef, ViewChild } from '@angular/core';
-import { COMMA, ENTER } from '@angular/cdk/keycodes';
 import { Movie } from '../models/Movie';
 import { MovieService } from './movie.service';
 import { FormControl } from '@angular/forms';
 import { Observable } from 'rxjs';
-import { map, startWith, debounceTime, distinctUntilChanged } from 'rxjs/operators';
+import { from } from 'rxjs';
+import { mergeMap, startWith, debounceTime, distinctUntilChanged } from 'rxjs/operators';
 import { MatAutocompleteSelectedEvent, MatChipInputEvent, MatAutocomplete } from '@angular/material';
 
 @Component({
@@ -20,7 +20,6 @@ import { MatAutocompleteSelectedEvent, MatChipInputEvent, MatAutocomplete } from
     addOnBlur = false;
     separatorKeyCodes: number[] = [];
 
-    movies: Movie[];
     filteredMovies: Observable<Movie[]>;
     selectedMovies: Movie[];
 
@@ -30,27 +29,20 @@ import { MatAutocompleteSelectedEvent, MatChipInputEvent, MatAutocomplete } from
     @ViewChild('auto') matAutocomplete: MatAutocomplete;
 
     constructor(private movieService: MovieService) {
-      this.movies = new Array();
       this.selectedMovies = new Array();
     }
 
     ngOnInit() {
-      this.getMovies();
-    }
-
-    async getMovies() {
-      this.movies = await this.movieService.getMovies();
-
       this.filteredMovies = this.moviesFormControl.valueChanges
       .pipe(
         startWith(''),
-        // map((movieName: string | null) => movieName ? this._filter(movieName) : this.movies),
-        map(movieName => this._filter(movieName)),
+        mergeMap(searchString => {
+          var a = this.filter(searchString)
+          return from(a)
+        }),
         debounceTime(500),
         distinctUntilChanged(),
-      );
-
-      // this.filteredMovies.subscribe(m => console.log(m.map(n => n.name)));
+      )
     }
 
     selectMovie(event: MatAutocompleteSelectedEvent) {
@@ -75,10 +67,9 @@ import { MatAutocompleteSelectedEvent, MatChipInputEvent, MatAutocomplete } from
       console.log(recommendations);
     }
 
-    private _filter(value: string): Movie[] {
-      if (!(typeof(value) === "string")) return this.movies;
-      const filterValue = value.toLowerCase();
-
-      return this.movies.filter(option => option.name.toLowerCase().includes(filterValue));
+    async filter(value: string) {
+      if (!(typeof(value) === "string") || value === "") return Promise.resolve(new Array<Movie>());
+      var filteredMovies = await this.movieService.getMovies(value)
+      return filteredMovies
     }
   }
