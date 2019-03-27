@@ -1,12 +1,34 @@
-
-
 <form class="movies-form">
     <mat-form-field class="movies-full-width">
-        <input type="text" placeholder="Pick a movie" aria-label="Number" matInput [formControl]="moviesFormControl" [matAutocomplete]="auto">
-        <mat-autocomplete #auto="matAutocomplete">
-            <mat-option (onSelectionChange)="selectMovie($event)" *ngFor="let movie of filteredOptions | async" [value]="movie">
+        <mat-chip-list #chipList aria-label="Movie selection">
+            <mat-chip 
+                *ngFor="let selectedMovie of selectedMovies"
+                [selectable]="selectable"
+                [removable]="removable"
+                (removed)="remove(selectedMovie)">
+                {{selectedMovie.name}}
+                <mat-icon matChipRemove *ngIf="removable">cancel</mat-icon>
+            </mat-chip>
+
+            <input  
+            matInput
+            placeholder="Pick a movie" 
+            #movieInput
+            [formControl]="moviesFormControl" 
+            [matAutocomplete]="auto"
+            [matChipInputFor]="chipList"
+            [matChipInputSeparatorKeyCodes]="separatorKeyCodes"
+            [matChipInputAddOnBlur]="addOnBlur"
+            (matChipInputTokenEnd)="add($event)">
+        </mat-chip-list>
+        <mat-autocomplete #auto="matAutocomplete" (optionSelected)="selectMovie($event)">
+            <mat-option *ngFor="let movie of filteredMovies | async" [value]="movie">
                 {{ movie.name }}
             </mat-option>
         </mat-autocomplete>
     </mat-form-field>
 </form>
+
+<button mat-raised-button color="accent" (click)="recommendMovies()" [disabled]="selectedMovies.length < 3">
+    Recommend
+</button>
