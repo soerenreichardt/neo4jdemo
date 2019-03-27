@@ -10,6 +10,7 @@ import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatAutocompleteModule } from '@angular/material/autocomplete';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material';
+import { MatChipsModule } from '@angular/material/chips';
 import { ReactiveFormsModule, FormsModule } from '@angular/forms';
 
 
@@ -26,6 +27,7 @@ import { ReactiveFormsModule, FormsModule } from '@angular/forms';
     MatAutocompleteModule,
     MatFormFieldModule,
     MatInputModule,
+    MatChipsModule,
     ReactiveFormsModule,
     FormsModule,
   ],
