@@ -13,6 +13,7 @@ import { MatInputModule, MatIconModule } from '@angular/material';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatButtonModule } from '@angular/material/button';
 import { ReactiveFormsModule, FormsModule } from '@angular/forms';
+import {MatListModule} from '@angular/material/list';
 
 
 @NgModule({
@@ -33,6 +34,7 @@ import { ReactiveFormsModule, FormsModule } from '@angular/forms';
     MatButtonModule,
     ReactiveFormsModule,
     FormsModule,
+    MatListModule
   ],
   providers: [],
   bootstrap: [AppComponent]

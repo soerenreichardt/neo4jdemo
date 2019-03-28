@@ -1,7 +1,7 @@
 <form class="movies-form">
     <mat-form-field class="movies-full-width">
         <mat-chip-list #chipList aria-label="Movie selection">
-            <mat-chip 
+            <mat-chip
                 *ngFor="let selectedMovie of selectedMovies"
                 [selectable]="selectable"
                 [removable]="removable"
@@ -10,11 +10,11 @@
                 <mat-icon matChipRemove *ngIf="removable">cancel</mat-icon>
             </mat-chip>
 
-            <input  
+            <input
             matInput
-            placeholder="Pick a movie" 
+            placeholder="Pick a movie"
             #movieInput
-            [formControl]="moviesFormControl" 
+            [formControl]="moviesFormControl"
             [matAutocomplete]="auto"
             [matChipInputFor]="chipList"
             [matChipInputSeparatorKeyCodes]="separatorKeyCodes"
@@ -32,3 +32,12 @@
 <button mat-raised-button color="accent" (click)="recommendMovies()" [disabled]="selectedMovies.length < 3">
     Recommend
 </button>
+
+<mat-list>
+  <h3 mat-subheader>Recommendations</h3>
+  <mat-list-item *ngFor="let movie of recommendations">
+    <mat-icon mat-list-icon>grade</mat-icon>
+    <h4 mat-line>{{movie.name}}</h4>
+    <p mat-line> {{movie.score}} </p>
+  </mat-list-item>
+</mat-list>

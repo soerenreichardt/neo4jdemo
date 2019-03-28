@@ -16,7 +16,7 @@ export class MovieService {
         return this.neo4jService.run(
           `
           MATCH (n:Movie)
-          WHERE n.title CONTAINS "`+ searchString +`"
+          WHERE toLower(n.title) CONTAINS toLower("`+ searchString +`")
           RETURN id(n) AS id, n.title AS name
           `
         ).then(result => result.records.map(record => {
@@ -30,40 +30,26 @@ export class MovieService {
 
     getRecommendation(movies: Movie[]): Promise<Array<Movie>> {
         var movieIds = movies.map(m => m.id).join(", ");
-        var query = `
-        MATCH (movie:Movie)<-[rated:RATED]-(user)
-                WHERE id(movie) IN [`+ movieIds +`]
-                AND rated.rating >= 4
-        WITH user, COUNT(movie) AS commons WHERE commons = 3
-        MATCH (user)-[rated:RATED]->(movie:Movie)
-              WHERE NOT id(movie) IN [`+ movieIds +`]
-        RETURN movie.title as name, id(movie) as id, COUNT(movie) as score ORDER BY score DESC
+        var query =
         `
+        MATCH (movie:Movie)-[:IN_GENRE]->(genre: Genre)
+        WHERE id(movie) IN [`+ movieIds +`]
+        WITH COLLECT(DISTINCT genre) as likedGenres, COLLECT(DISTINCT movie) as movies
 
-        // var foo =
-        // `
-        // MATCH (u1:User {name:"Cynthia Freeman"})-[r:RATED]->(m:Movie)
-        // WITH u1, avg(r.rating) AS u1_mean
+        UNWIND movies as likedMovie
+        MATCH (likedMovie)<-[rated:RATED]-(user)
+        WHERE rated.rating >= 4
 
-        // MATCH (u1)-[r1:RATED]->(m:Movie)<-[r2:RATED]-(u2)
-        // WITH u1, u1_mean, u2, COLLECT({r1: r1, r2: r2}) AS ratings WHERE size(ratings) > 10
+        WITH user, likedGenres
+        MATCH (user)-[rated:RATED]->(movie:Movie)-[:IN_GENRE]->(genre)
+        WHERE rated.rating >= 4
+          AND NOT id(movie) IN [`+ movieIds +`]
 
-        // MATCH (u2)-[r:RATED]->(m:Movie)
-        // WITH u1, u1_mean, u2, avg(r.rating) AS u2_mean, ratings
-
-        // UNWIND ratings AS r
-
-        // WITH sum( (r.r1.rating-u1_mean) * (r.r2.rating-u2_mean) ) AS nom,
-        //     sqrt( sum( (r.r1.rating - u1_mean)^2) * sum( (r.r2.rating - u2_mean) ^2)) AS denom,
-        //     u1, u2 WHERE denom <> 0
-
-        // WITH u1, u2, nom/denom AS pearson
-        // ORDER BY pearson DESC LIMIT 10
-
-        // MATCH (u2)-[r:RATED]->(m:Movie) WHERE NOT EXISTS( (u1)-[:RATED]->(m) )
-
-        // RETURN m.title, SUM( pearson * r.rating) AS score
-        // ORDER BY score DESC LIMIT 25`
+        WITH DISTINCT movie, COUNT(user) * size(apoc.coll.intersection(collect(genre), likedGenres)) as score
+        RETURN  id(movie) as id, movie.title as name, score
+        ORDER BY score DESC
+        LIMIT 25
+        `
 
         return this.neo4jService.run(query).then(result => result.records.map(record => {
             var movie = new Movie();

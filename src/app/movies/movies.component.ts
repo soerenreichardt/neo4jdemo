@@ -5,7 +5,7 @@ import { FormControl } from '@angular/forms';
 import { Observable } from 'rxjs';
 import { from } from 'rxjs';
 import { mergeMap, startWith, debounceTime, distinctUntilChanged } from 'rxjs/operators';
-import { MatAutocompleteSelectedEvent, MatChipInputEvent, MatAutocomplete } from '@angular/material';
+import { MatAutocompleteSelectedEvent, MatAutocomplete } from '@angular/material';
 
 @Component({
     selector: 'movies',
@@ -22,6 +22,7 @@ import { MatAutocompleteSelectedEvent, MatChipInputEvent, MatAutocomplete } from
 
     filteredMovies: Observable<Movie[]>;
     selectedMovies: Movie[];
+    recommendations: Movie[];
 
     moviesFormControl = new FormControl();
 
@@ -63,8 +64,7 @@ import { MatAutocompleteSelectedEvent, MatChipInputEvent, MatAutocomplete } from
     }
 
     async recommendMovies() {
-      var recommendations = await this.movieService.getRecommendation(this.selectedMovies);
-      console.log(recommendations);
+      this.recommendations = await this.movieService.getRecommendation(this.selectedMovies);
     }
 
     async filter(value: string) {
